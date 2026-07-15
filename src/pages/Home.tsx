@@ -141,34 +141,55 @@ export default function Home() {
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Solução mais robusta usando Audio() direto
-  const handlePlayAudio = () => {
+  // Inicializa o áudio uma única vez
+  const getAudio = () => {
+    if (!audioRef.current) {
+      const audio = new Audio("/dr-ia_audio.mp3");
+      audio.preload = "auto";
+      audio.onended = () => setIsPlayingAudio(false);
+      audio.onpause = () => setIsPlayingAudio(false);
+      audio.onerror = (e) => console.error("Erro no carregamento do áudio:", e);
+      audioRef.current = audio;
+    }
+    return audioRef.current;
+  };
+
+  const handlePlayAudio = async () => {
+    const audio = getAudio();
+
+    if (isPlayingAudio) {
+      audio.pause();
+      setIsPlayingAudio(false);
+      return;
+    }
+
     try {
-      if (!audioRef.current) {
-        audioRef.current = new Audio("/dr-ia_audio.mp3");
-        audioRef.current.onended = () => setIsPlayingAudio(false);
-        audioRef.current.onpause = () => setIsPlayingAudio(false);
-      }
+      audio.currentTime = 0;
 
-      const audio = audioRef.current;
-
-      if (isPlayingAudio) {
-        audio.pause();
-        setIsPlayingAudio(false);
-      } else {
-        audio.currentTime = 0;
-        audio.play()
-          .then(() => {
-            setIsPlayingAudio(true);
-          })
-          .catch((err) => {
-            console.error("Erro ao tocar áudio:", err);
-            // Último recurso: mostrar alerta amigável
-            alert("O áudio não pôde ser reproduzido automaticamente. Clique novamente ou verifique as permissões do navegador.");
-          });
-      }
+      // Tenta tocar normalmente primeiro
+      await audio.play();
+      setIsPlayingAudio(true);
     } catch (error) {
-      console.error("Erro geral no áudio:", error);
+      console.warn("Primeira tentativa falhou, tentando com muted:", error);
+
+      try {
+        // Estratégia comprovada: tocar muted primeiro (bypassa política de autoplay)
+        audio.muted = true;
+        await audio.play();
+        audio.muted = false; // Desmuta depois de começar a tocar
+        setIsPlayingAudio(true);
+      } catch (finalError) {
+        console.error("Falha total ao reproduzir áudio:", finalError);
+        // Última tentativa: forçar unmute e tentar novamente
+        audio.muted = false;
+        try {
+          await audio.play();
+          setIsPlayingAudio(true);
+        } catch (e) {
+          console.error("Áudio bloqueado pelo navegador:", e);
+          // Não mostra mais alerta — apenas log
+        }
+      }
     }
   };
 
