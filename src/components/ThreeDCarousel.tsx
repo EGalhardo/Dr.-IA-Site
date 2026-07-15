@@ -1,12 +1,9 @@
 import { useState, useEffect, useRef, useCallback, MouseEvent as ReactMouseEvent, TouchEvent as ReactTouchEvent } from "react";
-import { ChevronLeft, ChevronRight, Play, Pause } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
-interface ThreeDCarouselProps {
-  isPlayingAudio?: boolean;
-  onPlayClick?: () => void;
-}
+interface ThreeDCarouselProps {}
 
-let globalAudio: HTMLAudioElement | null = null;
+
 
 const CARDS = [
   { img: "https://i.postimg.cc/65HGxbbj/1.png", label: "Identificação Civil", sub: "BI & Passaporte" },
@@ -21,30 +18,7 @@ const N = CARDS.length;
 const ANGLE_STEP = 360 / N;
 const BASE_SPEED = 48; // seconds per full rotation
 
-export default function ThreeDCarousel({ isPlayingAudio = false, onPlayClick }: ThreeDCarouselProps) {
-  // Áudio gerenciado localmente no carrossel
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  const toggleAudio = () => {
-    if (!audioRef.current) {
-      audioRef.current = new Audio("/dr-ia_audio.mp3");
-      audioRef.current.onended = () => {
-        // Força atualização do estado do pai
-        if (onPlayClick) onPlayClick();
-      };
-    }
-
-    const audio = audioRef.current;
-
-    if (isPlayingAudio) {
-      audio.pause();
-    } else {
-      audio.currentTime = 0;
-      audio.play().catch(console.error);
-    }
-    
-    if (onPlayClick) onPlayClick();
-  };
+export default function ThreeDCarousel({}: ThreeDCarouselProps) {
   const [currentAngle, setCurrentAngle] = useState(0);
   const [activeCard, setActiveCard] = useState(0);
   const [radius, setRadius] = useState(425);
@@ -218,26 +192,7 @@ export default function ThreeDCarousel({ isPlayingAudio = false, onPlayClick }: 
           ))}
         </div>
 
-        {/* Translucent Glass Play Button centered over the cards */}
-        {onPlayClick && (
-          <button 
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleAudio();
-            }}
-            className="absolute z-20 w-16 h-16 min-[380px]:w-20 min-[380px]:h-20 sm:w-28 sm:h-28 bg-white/15 hover:bg-white/30 border-[2px] sm:border-[3px] border-white backdrop-blur-md text-white rounded-full flex items-center justify-center shadow-[0_0_50px_rgba(255,255,255,0.4)] transition-all duration-300 hover:scale-115 hover:shadow-[0_0_60px_rgba(37,99,235,0.6)] active:scale-95 cursor-pointer group"
-            aria-label={isPlayingAudio ? "Pausar Áudio" : "Tocar Áudio"}
-          >
-            {/* Intensive dual pulsing waves */}
-            <div className={`absolute inset-0 rounded-full border border-white/60 pointer-events-none ${isPlayingAudio ? "animate-ping" : "group-hover:animate-ping"}`} />
-            <div className={`absolute -inset-2 sm:-inset-3 rounded-full border border-blue-500/40 pointer-events-none ${isPlayingAudio ? "animate-pulse [animation-duration:1s]" : "group-hover:animate-pulse [animation-duration:1.5s]"}`} />
-            {isPlayingAudio ? (
-              <Pause size={cardW < 120 ? 22 : cardW < 155 ? 28 : 38} fill="currentColor" className="text-white transition-transform duration-300 group-hover:scale-115" />
-            ) : (
-              <Play size={cardW < 120 ? 22 : cardW < 155 ? 28 : 38} fill="currentColor" className="translate-x-[2px] sm:translate-x-[3px] text-white transition-transform duration-300 group-hover:scale-115" />
-            )}
-          </button>
-        )}
+
       </div>
 
       {/* Controls */}

@@ -138,67 +138,7 @@ export default function Home() {
   const [isVideoOpen, setIsVideoOpen] = useState(false);
   const [demoStep, setDemoStep] = useState(0);
 
-  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
-  const audioInstanceRef = useRef<HTMLAudioElement | null>(null);
 
-  const handlePlayAudio = () => {
-    // Cria áudio apenas uma vez
-    if (!audioInstanceRef.current) {
-      const audio = new Audio();
-      audio.src = "/dr-ia_audio.mp3";
-      audio.preload = "auto";
-      
-      audio.onended = () => setIsPlayingAudio(false);
-      audio.onpause = () => setIsPlayingAudio(false);
-      audio.onerror = (e) => {
-        console.error("Erro ao carregar/reproduzir áudio:", e);
-        setIsPlayingAudio(false);
-      };
-      
-      audioInstanceRef.current = audio;
-    }
-
-    const audio = audioInstanceRef.current;
-
-    if (isPlayingAudio) {
-      audio.pause();
-      setIsPlayingAudio(false);
-    } else {
-      // Reset e reprodução
-      audio.currentTime = 0;
-
-      // Força carregamento
-      audio.load();
-
-      audio.play()
-        .then(() => {
-          setIsPlayingAudio(true);
-        })
-        .catch((error) => {
-          console.error("Falha ao tocar áudio:", error);
-          
-          // Tenta com muted (política de autoplay)
-          audio.muted = true;
-          audio.play()
-            .then(() => {
-              audio.muted = false;
-              setIsPlayingAudio(true);
-            })
-            .catch((mutedError) => {
-              console.error("Áudio bloqueado mesmo com muted:", mutedError);
-              setIsPlayingAudio(false);
-            });
-        });
-    }
-  };
-
-  useEffect(() => {
-    return () => {
-      if (audioInstanceRef.current) {
-        audioInstanceRef.current.pause();
-      }
-    };
-  }, []);
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
@@ -254,7 +194,7 @@ export default function Home() {
         <div className="absolute bottom-[-48px] right-[-64px] w-[304px] h-[304px] rounded-full bg-blue-500/5 blur-3xl pointer-events-none" />
         
         <div className="max-w-5xl mx-auto w-full flex flex-col items-center text-center z-10 relative pt-[48px]">
-          <ThreeDCarousel isPlayingAudio={isPlayingAudio} onPlayClick={handlePlayAudio} />
+          <ThreeDCarousel />
         </div>
       </section>
 
@@ -427,8 +367,6 @@ export default function Home() {
 
       <DownloadModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
       <NewVersionModal isOpen={isNewVersionModalOpen} onClose={() => setIsNewVersionModalOpen(false)} />
-      
-      {/* Áudio gerenciado via JavaScript (new Audio) - sem elemento no DOM */}
       {selectedPlan && (
         <PlanActivationModal 
           isOpen={isPlanModalOpen} 
