@@ -1,9 +1,6 @@
 import { useState, useEffect, useRef, useCallback, MouseEvent as ReactMouseEvent, TouchEvent as ReactTouchEvent } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-interface ThreeDCarouselProps {}
-
-
 
 const CARDS = [
   { img: "https://i.postimg.cc/65HGxbbj/1.png", label: "Identificação Civil", sub: "BI & Passaporte" },
@@ -18,7 +15,7 @@ const N = CARDS.length;
 const ANGLE_STEP = 360 / N;
 const BASE_SPEED = 48; // seconds per full rotation
 
-export default function ThreeDCarousel({}: ThreeDCarouselProps) {
+export default function ThreeDCarousel() {
   const [currentAngle, setCurrentAngle] = useState(0);
   const [activeCard, setActiveCard] = useState(0);
   const [radius, setRadius] = useState(425);
