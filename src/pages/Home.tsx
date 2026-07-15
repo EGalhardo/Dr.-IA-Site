@@ -139,64 +139,62 @@ export default function Home() {
   const [demoStep, setDemoStep] = useState(0);
 
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioInstanceRef = useRef<HTMLAudioElement | null>(null);
 
-  // Inicializa o áudio uma única vez
-  const getAudio = () => {
-    if (!audioRef.current) {
+  const handlePlayAudio = () => {
+    // Cria uma única instância de áudio
+    if (!audioInstanceRef.current) {
       const audio = new Audio("/dr-ia_audio.mp3");
       audio.preload = "auto";
+      
       audio.onended = () => setIsPlayingAudio(false);
       audio.onpause = () => setIsPlayingAudio(false);
-      audio.onerror = (e) => console.error("Erro no carregamento do áudio:", e);
-      audioRef.current = audio;
+      audio.onerror = (e) => {
+        console.error("Erro no áudio:", e);
+        setIsPlayingAudio(false);
+      };
+      
+      audioInstanceRef.current = audio;
     }
-    return audioRef.current;
-  };
 
-  const handlePlayAudio = async () => {
-    const audio = getAudio();
+    const audio = audioInstanceRef.current;
 
     if (isPlayingAudio) {
       audio.pause();
       setIsPlayingAudio(false);
-      return;
-    }
-
-    try {
+    } else {
       audio.currentTime = 0;
-
-      // Tenta tocar normalmente primeiro
-      await audio.play();
-      setIsPlayingAudio(true);
-    } catch (error) {
-      console.warn("Primeira tentativa falhou, tentando com muted:", error);
-
-      try {
-        // Estratégia comprovada: tocar muted primeiro (bypassa política de autoplay)
-        audio.muted = true;
-        await audio.play();
-        audio.muted = false; // Desmuta depois de começar a tocar
-        setIsPlayingAudio(true);
-      } catch (finalError) {
-        console.error("Falha total ao reproduzir áudio:", finalError);
-        // Última tentativa: forçar unmute e tentar novamente
-        audio.muted = false;
-        try {
-          await audio.play();
-          setIsPlayingAudio(true);
-        } catch (e) {
-          console.error("Áudio bloqueado pelo navegador:", e);
-          // Não mostra mais alerta — apenas log
-        }
+      
+      // Tenta tocar diretamente
+      const playPromise = audio.play();
+      
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            setIsPlayingAudio(true);
+          })
+          .catch((error) => {
+            console.error("Erro ao reproduzir áudio:", error);
+            
+            // Última tentativa: tocar muted
+            audio.muted = true;
+            audio.play()
+              .then(() => {
+                audio.muted = false;
+                setIsPlayingAudio(true);
+              })
+              .catch(() => {
+                setIsPlayingAudio(false);
+              });
+          });
       }
     }
   };
 
   useEffect(() => {
     return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
+      if (audioInstanceRef.current) {
+        audioInstanceRef.current.pause();
       }
     };
   }, []);
@@ -429,18 +427,7 @@ export default function Home() {
       <DownloadModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
       <NewVersionModal isOpen={isNewVersionModalOpen} onClose={() => setIsNewVersionModalOpen(false)} />
       
-      <audio 
-        ref={audioRef}
-        src="/dr-ia_audio.mp3"
-        preload="auto"
-        crossOrigin="anonymous"
-        onPlay={() => setIsPlayingAudio(true)}
-        onPause={() => setIsPlayingAudio(false)}
-        onEnded={() => setIsPlayingAudio(false)}
-        onError={(e) => console.error("Erro no elemento de áudio:", e)}
-      >
-        Your browser does not support the audio element.
-      </audio>
+      {/* Áudio gerenciado via JavaScript (new Audio) - sem elemento no DOM */}
       {selectedPlan && (
         <PlanActivationModal 
           isOpen={isPlanModalOpen} 
