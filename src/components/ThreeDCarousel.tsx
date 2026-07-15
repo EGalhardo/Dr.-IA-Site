@@ -6,6 +6,8 @@ interface ThreeDCarouselProps {
   onPlayClick?: () => void;
 }
 
+let globalAudio: HTMLAudioElement | null = null;
+
 const CARDS = [
   { img: "https://i.postimg.cc/65HGxbbj/1.png", label: "Identificação Civil", sub: "BI & Passaporte" },
   { img: "https://i.postimg.cc/651Tm2yZ/2.png", label: "Finanças & AGT", sub: "Impostos & Guias" },
@@ -20,6 +22,29 @@ const ANGLE_STEP = 360 / N;
 const BASE_SPEED = 48; // seconds per full rotation
 
 export default function ThreeDCarousel({ isPlayingAudio = false, onPlayClick }: ThreeDCarouselProps) {
+  // Áudio gerenciado localmente no carrossel
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const toggleAudio = () => {
+    if (!audioRef.current) {
+      audioRef.current = new Audio("/dr-ia_audio.mp3");
+      audioRef.current.onended = () => {
+        // Força atualização do estado do pai
+        if (onPlayClick) onPlayClick();
+      };
+    }
+
+    const audio = audioRef.current;
+
+    if (isPlayingAudio) {
+      audio.pause();
+    } else {
+      audio.currentTime = 0;
+      audio.play().catch(console.error);
+    }
+    
+    if (onPlayClick) onPlayClick();
+  };
   const [currentAngle, setCurrentAngle] = useState(0);
   const [activeCard, setActiveCard] = useState(0);
   const [radius, setRadius] = useState(425);
@@ -198,7 +223,7 @@ export default function ThreeDCarousel({ isPlayingAudio = false, onPlayClick }: 
           <button 
             onClick={(e) => {
               e.stopPropagation();
-              onPlayClick();
+              toggleAudio();
             }}
             className="absolute z-20 w-16 h-16 min-[380px]:w-20 min-[380px]:h-20 sm:w-28 sm:h-28 bg-white/15 hover:bg-white/30 border-[2px] sm:border-[3px] border-white backdrop-blur-md text-white rounded-full flex items-center justify-center shadow-[0_0_50px_rgba(255,255,255,0.4)] transition-all duration-300 hover:scale-115 hover:shadow-[0_0_60px_rgba(37,99,235,0.6)] active:scale-95 cursor-pointer group"
             aria-label={isPlayingAudio ? "Pausar Áudio" : "Tocar Áudio"}
