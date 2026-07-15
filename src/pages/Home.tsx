@@ -141,38 +141,34 @@ export default function Home() {
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const handlePlayAudio = async () => {
-    if (!audioRef.current) return;
-
-    const audio = audioRef.current;
-
-    if (isPlayingAudio) {
-      audio.pause();
-      setIsPlayingAudio(false);
-    } else {
-      try {
-        // Garante que o áudio está carregado
-        if (audio.readyState < 2) {
-          await new Promise(resolve => {
-            audio.oncanplaythrough = resolve;
-            audio.load();
-          });
-        }
-        
-        await audio.play();
-        setIsPlayingAudio(true);
-      } catch (error) {
-        console.error("Erro ao reproduzir o áudio:", error);
-        // Tenta novamente com muted (alguns navegadores bloqueiam autoplay)
-        try {
-          audio.muted = true;
-          await audio.play();
-          audio.muted = false;
-          setIsPlayingAudio(true);
-        } catch (e) {
-          alert("Não foi possível reproduzir o áudio. Verifique a sua conexão ou tente novamente.");
-        }
+  // Solução mais robusta usando Audio() direto
+  const handlePlayAudio = () => {
+    try {
+      if (!audioRef.current) {
+        audioRef.current = new Audio("/dr-ia_audio.mp3");
+        audioRef.current.onended = () => setIsPlayingAudio(false);
+        audioRef.current.onpause = () => setIsPlayingAudio(false);
       }
+
+      const audio = audioRef.current;
+
+      if (isPlayingAudio) {
+        audio.pause();
+        setIsPlayingAudio(false);
+      } else {
+        audio.currentTime = 0;
+        audio.play()
+          .then(() => {
+            setIsPlayingAudio(true);
+          })
+          .catch((err) => {
+            console.error("Erro ao tocar áudio:", err);
+            // Último recurso: mostrar alerta amigável
+            alert("O áudio não pôde ser reproduzido automaticamente. Clique novamente ou verifique as permissões do navegador.");
+          });
+      }
+    } catch (error) {
+      console.error("Erro geral no áudio:", error);
     }
   };
 
