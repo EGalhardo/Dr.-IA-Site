@@ -33,29 +33,29 @@ export default function ThreeDCarousel() {
   const updateRadius = useCallback(() => {
     const w = window.innerWidth;
     if (w < 370) {
-      setCardW(95);
-      setCardH(168);
-      setRadius(78);
+      setCardW(86);   // 95 * 0.9
+      setCardH(151);  // 168 * 0.9
+      setRadius(70);  // 78 * 0.9
     } else if (w < 430) {
-      setCardW(112);
-      setCardH(198);
-      setRadius(94);
+      setCardW(101);  // 112 * 0.9
+      setCardH(178);  // 198 * 0.9
+      setRadius(85);  // 94 * 0.9
     } else if (w < 540) {
-      setCardW(136);
-      setCardH(241);
-      setRadius(114);
+      setCardW(122);  // 136 * 0.9
+      setCardH(217);  // 241 * 0.9
+      setRadius(103); // 114 * 0.9
     } else if (w < 640) {
-      setCardW(151);
-      setCardH(270);
-      setRadius(143);
+      setCardW(136);  // 151 * 0.9
+      setCardH(243);  // 270 * 0.9
+      setRadius(129); // 143 * 0.9
     } else if (w < 900) {
-      setCardW(168);
-      setCardH(299);
-      setRadius(204);
+      setCardW(151);  // 168 * 0.9
+      setCardH(269);  // 299 * 0.9
+      setRadius(184); // 204 * 0.9
     } else {
-      setCardW(193);
-      setCardH(342);
-      setRadius(340);
+      setCardW(174);  // 193 * 0.9
+      setCardH(308);  // 342 * 0.9
+      setRadius(306); // 340 * 0.9
     }
   }, []);
 
