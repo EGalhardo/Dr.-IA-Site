@@ -142,15 +142,16 @@ export default function Home() {
   const audioInstanceRef = useRef<HTMLAudioElement | null>(null);
 
   const handlePlayAudio = () => {
-    // Cria uma única instância de áudio
+    // Cria áudio apenas uma vez
     if (!audioInstanceRef.current) {
-      const audio = new Audio("/dr-ia_audio.mp3");
+      const audio = new Audio();
+      audio.src = "/dr-ia_audio.mp3";
       audio.preload = "auto";
       
       audio.onended = () => setIsPlayingAudio(false);
       audio.onpause = () => setIsPlayingAudio(false);
       audio.onerror = (e) => {
-        console.error("Erro no áudio:", e);
+        console.error("Erro ao carregar/reproduzir áudio:", e);
         setIsPlayingAudio(false);
       };
       
@@ -163,31 +164,31 @@ export default function Home() {
       audio.pause();
       setIsPlayingAudio(false);
     } else {
+      // Reset e reprodução
       audio.currentTime = 0;
-      
-      // Tenta tocar diretamente
-      const playPromise = audio.play();
-      
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => {
-            setIsPlayingAudio(true);
-          })
-          .catch((error) => {
-            console.error("Erro ao reproduzir áudio:", error);
-            
-            // Última tentativa: tocar muted
-            audio.muted = true;
-            audio.play()
-              .then(() => {
-                audio.muted = false;
-                setIsPlayingAudio(true);
-              })
-              .catch(() => {
-                setIsPlayingAudio(false);
-              });
-          });
-      }
+
+      // Força carregamento
+      audio.load();
+
+      audio.play()
+        .then(() => {
+          setIsPlayingAudio(true);
+        })
+        .catch((error) => {
+          console.error("Falha ao tocar áudio:", error);
+          
+          // Tenta com muted (política de autoplay)
+          audio.muted = true;
+          audio.play()
+            .then(() => {
+              audio.muted = false;
+              setIsPlayingAudio(true);
+            })
+            .catch((mutedError) => {
+              console.error("Áudio bloqueado mesmo com muted:", mutedError);
+              setIsPlayingAudio(false);
+            });
+        });
     }
   };
 
