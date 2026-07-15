@@ -141,20 +141,38 @@ export default function Home() {
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const handlePlayAudio = () => {
+  const handlePlayAudio = async () => {
     if (!audioRef.current) return;
 
+    const audio = audioRef.current;
+
     if (isPlayingAudio) {
-      audioRef.current.pause();
+      audio.pause();
       setIsPlayingAudio(false);
     } else {
-      audioRef.current.play()
-        .then(() => {
+      try {
+        // Garante que o áudio está carregado
+        if (audio.readyState < 2) {
+          await new Promise(resolve => {
+            audio.oncanplaythrough = resolve;
+            audio.load();
+          });
+        }
+        
+        await audio.play();
+        setIsPlayingAudio(true);
+      } catch (error) {
+        console.error("Erro ao reproduzir o áudio:", error);
+        // Tenta novamente com muted (alguns navegadores bloqueiam autoplay)
+        try {
+          audio.muted = true;
+          await audio.play();
+          audio.muted = false;
           setIsPlayingAudio(true);
-        })
-        .catch((error) => {
-          console.error("Erro ao reproduzir o áudio:", error);
-        });
+        } catch (e) {
+          alert("Não foi possível reproduzir o áudio. Verifique a sua conexão ou tente novamente.");
+        }
+      }
     }
   };
 
@@ -398,9 +416,11 @@ export default function Home() {
         ref={audioRef}
         src="/dr-ia_audio.mp3"
         preload="auto"
+        crossOrigin="anonymous"
         onPlay={() => setIsPlayingAudio(true)}
         onPause={() => setIsPlayingAudio(false)}
         onEnded={() => setIsPlayingAudio(false)}
+        onError={(e) => console.error("Erro no elemento de áudio:", e)}
       >
         Your browser does not support the audio element.
       </audio>
